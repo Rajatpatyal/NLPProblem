@@ -1,0 +1,110 @@
+import pandas as pd
+import nltk
+nltk.download('punkt')
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize,sent_tokenize
+df=pd.read_excel(r"C:\Users\Hp\Downloads\sample_data.xlsx")
+df.head()
+df_review=df['Review']
+df_review.head()
+stop_word=set(stopwords.words('english'))
+print(stop_word)
+
+
+df.head()
+def tokenize_text(text):
+    if isinstance(text, str):
+        tokens = word_tokenize(text)
+        return tokens
+    else:
+        return []
+df['Review'].apply(lambda x : tokenize_text(x))
+
+def remove_stop_words(text):
+    if isinstance(text, str):
+        tokens = nltk.word_tokenize(text)
+        filtered_tokens = [token for token in tokens if token.lower() not in stop_word]
+        return ' '.join(filtered_tokens)
+    else:
+        return ''
+
+df['Review'].apply(remove_stop_words)
+def pos_tagging(text):
+    if isinstance(text,str):
+     tokens = word_tokenize(text)
+     pos_tags = nltk.pos_tag(tokens)
+     return pos_tags
+    else :
+        return []
+df['Review'].apply(pos_tagging)
+
+lemmatizer=WordNetLemmatizer()
+def lem_text(text):
+    if isinstance(text,str):
+        tokens= word_tokenize(text)
+        lemma= [lemmatizer.lemmatize(tokens) for tokens in tokens]
+        return lemma 
+    else:
+        return []
+df['lem']= df['Review'].apply(lem_text) 
+df['lem'].head()
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score
+import pandas as pd
+
+# Example DataFrame
+df = pd.DataFrame({'text': ['This is a positive review.', 'This is a negative review.', 'Another positive sentence.']})
+df['label'] = [1, 0, 1]  # Binary labels: 1 for positive, 0 for negative
+
+# Split the DataFrame into features (X) and target variable (y)
+X = df['lem']
+y = df['Sentiment']
+
+# Preprocess the text data (if needed)
+# You can use the same preprocessing steps we discussed earlier (e.g., tokenization, stop word removal, etc.)
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Initialize and train the Naive Bayes classifier
+tfidf_vectorizer = TfidfVectorizer()
+X_train_tfidf = tfidf_vectorizer.fit_transform(X_train)
+naive_bayes = MultinomialNB()
+naive_bayes.fit(X_train_tfidf, y_train)
+
+# Transform the test data using the same vectorizer
+X_test_tfidf = tfidf_vectorizer.transform(X_test)
+
+# Make predictions on the test data
+y_pred = naive_bayes.predict(X_test_tfidf)
+
+# Evaluate the accuracy of the classifier
+accuracy = accuracy_score(y_test, y_pred)
+print('Accuracy:', accuracy)
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from imblearn.over_sampling import RandomOverSampler
+from imblearn.pipeline import make_pipeline
+
+
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Create a pipeline with RandomOverSampler and Naive Bayes classifier
+pipeline = make_pipeline(RandomOverSampler(), GaussianNB())
+
+# Fit the pipeline on the training data
+pipeline.fit(X_train, y_train)
+
+# Predict on the test data
+y_pred = pipeline.predict(X_test)
+
+# Evaluate the performance of the classifier
+accuracy = pipeline.score(X_test, y_test)
+print("Accuracy:", accuracy)
